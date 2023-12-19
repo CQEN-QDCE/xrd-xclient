@@ -1,0 +1,72 @@
+{{template "base" .}}
+
+{{define "title"}}Données du ministère B{{end}}
+
+{{define "main"}}
+
+    <div class="container container-cards-pf">
+        <div class="row">
+            <p>&nbsp</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Les données du ministère B via X-Road</div>
+                    <div class="panel-body">
+                        {{if .Result}}
+                            <h3>Operation Result</h3>
+                            <pre><code class="json">{{.Result}}</code></pre>
+                            <h3>Request Headers</h3>
+                            <pre>{{.RequestHeaders}}</pre>
+                            <h3>Reply Headers</h3>
+                            <pre>{{.ReplyHeaders}}</pre>
+                        {{end}}
+                        <form action="/envapi-get" method="get">
+                            {{with .Form}}
+                                <div class="form-group">
+                                    <label>X-road security server URL:</label>
+                                    {{with .Errors.Get "url"}}{{template "error" .}}{{end}}
+                                    <input type="text" name="url" value="{{.Get "url"}}" placeholder="http://ss1:80" class="form-control" maxlength="255">
+                                    <small>Veuillez ne pas inclure le chemin d'accès et la chaîne de requête (tout ce qui suit le nom d'hôte et le numéro de port)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Identifiant client X-Road:</label>
+                                    {{with .Errors.Get "client"}}{{template "error" .}}{{end}}
+                                    <input type="text" name="client" value="{{.Get "client"}}" placeholder="DEMO/CQEN/1234/TestClient" class="form-control" maxlength="255">
+                                </div>
+                                <div class="form-group">
+                                    <label>Identifiant de service X-Road:</label>
+                                    {{with .Errors.Get "service"}}{{template "error" .}}{{end}}
+                                    <input type="text" name="service" value="{{.Get "service"}}" placeholder="DEMO/ORG/1234/TestService/TEST123" class="form-control" maxlength="255">
+                                </div>
+                                <label>Obtenir les données environnementales de l'air par region:</label>
+                                <input type="submit" class="btn btn-success" value="Soumettre">
+                            {{end}}
+                        </form>
+                        <form action="/envapi-airlevel" method="get">
+                            {{with .Form}}
+                                <!-- Include hidden input fields to pass data from the first form -->
+                                <input type="hidden" name="url" value="{{.Get "url"}}">
+                                <input type="hidden" name="client" value="{{.Get "client"}}">
+                                <input type="hidden" name="service" value="{{.Get "service"}}">
+                                <div class="form-group">
+                                    <label>Niveau de pollution:</label>
+                                    {{with .Errors.Get "airlevel"}}{{template "error" .}}{{end}}
+                                    <input type="text" name="airlevel" value="{{.Get "airlevel"}}" placeholder="4" class="form-control" maxlength="255">
+                                </div>
+                                <div class="form-group">
+                                    <label>Obtenir les régions par niveau de pollution:</label>
+                                    <input type="submit" class="btn btn-success" value="Soumettre">
+                                </div>
+                            {{end}}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+{{end}}
+
+
