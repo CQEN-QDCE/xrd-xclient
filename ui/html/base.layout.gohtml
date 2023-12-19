@@ -26,11 +26,11 @@
 
         <div class="collapse navbar-collapse navbar-collapse-1">
             <ul class="nav navbar-nav navbar-primary">
-                <li{{if eq .Active "envapi"}} class="active"{{end}}>
-                    <a href="/envapi">Les données du ministère B via X-Road</a>
-                </li>
                 <li{{if eq .Active "healthapi"}} class="active"{{end}}>
                     <a href="/healthapi">Les données du ministère A via X-Road</a>
+                </li>
+                <li{{if eq .Active "envapi"}} class="active"{{end}}>
+                    <a href="/envapi">Les données du ministère B via X-Road</a>
                 </li>
                 <li>
                     <a href="#" data-toggle="modal" data-target="#about-modal">About</a>
