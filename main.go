@@ -1,13 +1,11 @@
 package main
 
 import (
-	
-	"github.com/brynjarh/xclient/cmd"
+	"log"
+	"github.com/brynjarh/xclient/pkg/web"
 )
-
 func main() {
-
-    
-    cmd.Execute()
-	
+	addr := ":5000"
+	log.Printf("Starting server on %s", addr)
+	web.StartWWW(addr)
 }
