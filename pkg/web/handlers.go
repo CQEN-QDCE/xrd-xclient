@@ -14,7 +14,6 @@ func (app *application) envapiForm(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-    fmt.Println("petapiForm1:")
 	app.render(w, r, "envapi.page.gohtml", &templateData{
 		Form: forms.New(v),
 		Active: "envapi",
