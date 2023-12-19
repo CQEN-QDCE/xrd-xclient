@@ -11,6 +11,8 @@ type Client struct {
 	BaseURL   *url.URL
 	XRoadClient string
 	XRoadService string
+	AirLevel string
+	TypeImpact string
 	httpClient *http.Client
 }
 

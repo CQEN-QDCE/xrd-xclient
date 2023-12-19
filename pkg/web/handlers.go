@@ -5,183 +5,250 @@ import (
 	"github.com/brynjarh/xclient/pkg/forms"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
-
-func (app *application) timeForm(w http.ResponseWriter, r *http.Request) {
-	t:="url=http://localhost:80&client=CS/ORG/1111/TestClient&service=CS/ORG/1111/TestService/TEST123"
+func (app *application) envapiForm(w http.ResponseWriter, r *http.Request) {
+	t:="url=http://10.99.123.78:80&client=CS/GOUV/003/CLIENT1&service=CS/GOUV/004/PROVIDER1/001"
 	v, err := url.ParseQuery(t)
 	if err != nil {
 		panic(err)
 	}
-
-	app.render(w, r, "time.page.gohtml", &templateData{
+    fmt.Println("petapiForm1:")
+	app.render(w, r, "envapi.page.gohtml", &templateData{
 		Form: forms.New(v),
-		Active: "time",
+		Active: "envapi",
 	})
+} 
+
+func (app *application) healthtapiForm(w http.ResponseWriter, r *http.Request) {
+	t:="url=http://10.99.123.78:80&client=CS/GOUV/003/CLIENT1&service=CS/GOUV/002/PROVIDER1/001"
+   v, err := url.ParseQuery(t)
+   if err != nil {
+	   panic(err)
+   }
+   app.render(w, r, "healthapi.page.gohtml", &templateData{
+	   Form: forms.New(v),
+	   Active: "healthapi",
+   })
+} 
+
+func (app *application) envapiGet(w http.ResponseWriter, r *http.Request) {
+    // Process the form submission
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.Form)
+    form.Required("url", "client", "service")
+    form.MatchesPattern("url", forms.UrlRX)
+    form.ValidUrl("url")
+
+    if !form.Valid() {
+        app.render(w, r, "envapi.page.gohtml", &templateData{
+            Form:   form,
+            Active: "time",
+        })
+        return
+    }
+
+    baseURL := form.Get("url")
+    service := form.Get("service")
+
+    // Construct the URL without query parameters
+    baseURL = strings.TrimRight(baseURL, "/")
+    u, err := url.Parse(fmt.Sprintf("%s/r1/%s/v2/env/", baseURL, service))
+    if err != nil {
+        app.clientError(w, http.StatusInternalServerError)
+        return
+    }  
+
+    // Now we know we have a valid form
+    c := &Client{
+        BaseURL:     u,
+        XRoadClient: form.Get("client"),
+        XRoadService: service,
+        httpClient:   http.DefaultClient,
+    }
+
+	// Construct the URL with the encoded parameter
+    // Perform the GET request
+    result, req, rep, err := c.do("env/")
+    
+	// Handle the result and rendering as needed
+    app.render(w, r, "envapi.page.gohtml", &templateData{
+        Result:         result,
+        Form:           form,
+        Active:         "envapi",
+        RequestHeaders: req,
+        ReplyHeaders:   rep,
+    })
 }
 
-func (app *application) pingForm(w http.ResponseWriter, r *http.Request) {
-	t:="url=http://localhost:80&client=CS/ORG/1111/TestClient&service=CS/ORG/1111/TestService/TEST123"
-	v, err := url.ParseQuery(t)
-	if err != nil {
-		panic(err)
-	}
+func (app *application) envapiGetAirLevel(w http.ResponseWriter, r *http.Request) {
+    // Process the form submission
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
 
-	app.render(w, r, "ping.page.gohtml", &templateData{
-		Form: forms.New(v),
-		Active: "ping",
-	})
+    form := forms.New(r.Form)
+    form.Required("url", "client", "service", "airlevel")
+    form.MatchesPattern("url", forms.UrlRX)
+    form.ValidUrl("url")
+
+    if !form.Valid() {
+        app.render(w, r, "envapi.page.gohtml", &templateData{
+            Form:   form,
+            Active: "time",
+        })
+        return
+    }
+
+    baseURL := form.Get("url")
+    service := form.Get("service")
+    airlevel := form.Get("airlevel")
+
+    // Construct the URL without query parameters
+    baseURL = strings.TrimRight(baseURL, "/")
+    u, err := url.Parse(fmt.Sprintf("%s/r1/%s/v2/env/", baseURL, service))
+    if err != nil {
+        app.clientError(w, http.StatusInternalServerError)
+        return
+    }  
+
+    // Now we know we have a valid form
+    c := &Client{
+        BaseURL:     u,
+        XRoadClient: form.Get("client"),
+        XRoadService: service,
+        AirLevel:    airlevel,
+        httpClient:   http.DefaultClient,
+    }
+
+	// Construct the URL with the encoded parameter
+    // Perform the GET request
+    result, req, rep, err := c.do("env/air/" + airlevel)
+    
+	// Handle the result and rendering as needed
+    app.render(w, r, "envapi.page.gohtml", &templateData{
+        Result:         result,
+        Form:           form,
+        Active:         "envapi",
+        RequestHeaders: req,
+        ReplyHeaders:   rep,
+    })
 }
 
+func (app *application) healthapiGet(w http.ResponseWriter, r *http.Request) {
+    // Process the form submission
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
 
-func (app *application) continuous(w http.ResponseWriter, r *http.Request) {
-	t:="url=http://localhost:80&client=CS/ORG/1111/TestClient&service=CS/ORG/1111/TestService/TEST123"
-	v, err := url.ParseQuery(t)
-	if err != nil {
-		panic(err)
-	}
+    form := forms.New(r.Form)
+    form.Required("url", "client", "service")
+    form.MatchesPattern("url", forms.UrlRX)
+    form.ValidUrl("url")
 
-	app.render(w, r, "continuous.page.gohtml", &templateData{
-		Form: forms.New(v),
-		Active: "continuous",
-	})
+    if !form.Valid() {
+        app.render(w, r, "healthapi.page.gohtml", &templateData{
+            Form:   form,
+            Active: "time",
+        })
+        return
+    }
+
+    baseURL := form.Get("url")
+    service := form.Get("service")
+
+    // Construct the URL without query parameters
+    baseURL = strings.TrimRight(baseURL, "/")
+    u, err := url.Parse(fmt.Sprintf("%s/r1/%s/v2/health/", baseURL, service))
+    if err != nil {
+        app.clientError(w, http.StatusInternalServerError)
+        return
+    }  
+
+    // Now we know we have a valid form
+    c := &Client{
+        BaseURL:     u,
+        XRoadClient: form.Get("client"),
+        XRoadService: service,
+        httpClient:   http.DefaultClient,
+    }
+
+	// Construct the URL with the encoded parameter
+    // Perform the GET request
+    result, req, rep, err := c.do("health/")
+    
+	// Handle the result and rendering as needed
+    app.render(w, r, "healthapi.page.gohtml", &templateData{
+        Result:         result,
+        Form:           form,
+        Active:         "healthapi",
+        RequestHeaders: req,
+        ReplyHeaders:   rep,
+    })
 }
 
-func (app *application) timeService(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
+func (app *application) healthapiGetByImpact(w http.ResponseWriter, r *http.Request) {
+    // Process the form submission
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
 
-	form := forms.New(r.PostForm)
-	form.Required("url", "client", "service")
-	form.MatchesPattern("url", forms.UrlRX)
-	form.ValidUrl("url")
+    form := forms.New(r.Form)
+    form.Required("url", "client", "service", "typeimpact")
+    form.MatchesPattern("url", forms.UrlRX)
+    form.ValidUrl("url")
 
-	if !form.Valid() {
-		app.clientError(w, http.StatusNotAcceptable)
-		return
-	}
-	// Now we know we have a valid request.  Lets pass it down
+    if !form.Valid() {
+        app.render(w, r, "healthapi.page.gohtml", &templateData{
+            Form:   form,
+            Active: "time",
+        })
+        return
+    }
 
-	u, _ := url.Parse(form.Get("url"))
+    baseURL := form.Get("url")
+    service := form.Get("service")
+    typeimpact := form.Get("typeimpact")
 
-	// Now u is a valid parsed url for the security server
+    // Construct the URL without query parameters
+    baseURL = strings.TrimRight(baseURL, "/")
+    u, err := url.Parse(fmt.Sprintf("%s/r1/%s/v2/health/", baseURL, service))
+    if err != nil {
+        app.clientError(w, http.StatusInternalServerError)
+        return
+    }  
 
-	// Now we know we have a valid form
-	c := &Client{
-		BaseURL:  u,
-		XRoadClient:  form.Get("client"),
-		XRoadService:  form.Get("service"),
-		httpClient: http.DefaultClient,
-	}
-	// We have created the client object and filled in all neccesary data to query the API
-	result, _, _, err := c.do("time")
-	// We have called the service and received a reply
-	if err != nil {
-		result = fmt.Sprintf("ERROR: %s", err)
-	}
+    // Now we know we have a valid form
+    c := &Client{
+        BaseURL:     u,
+        XRoadClient: form.Get("client"),
+        XRoadService: service,
+        TypeImpact:   typeimpact,
+        httpClient:   http.DefaultClient,
+    }
 
-	msg := fmt.Sprintf(`%s`, result)
-	w.Write([]byte(msg))
-}
-
-
-func (app *application) timePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	form := forms.New(r.PostForm)
-	form.Required("url", "client", "service")
-	form.MatchesPattern("url", forms.UrlRX)
-	form.ValidUrl("url")
-
-	if !form.Valid() {
-		//for k, v := range form.Errors {
-		//	fmt.Printf("key[%s] value[%s]\n", k, v)
-		//}
-		app.render(w, r, "time.page.gohtml", &templateData{
-			Form: form,
-			Active: "time",
-		})
-		return
-	}
-	u, _ := url.Parse(form.Get("url"))
-	// Now u is a valid parsed url for the security server
-
-	// Now we know we have a valid form
-	c := &Client{
-		BaseURL:  u,
-		XRoadClient:  form.Get("client"),
-		XRoadService:  form.Get("service"),
-		httpClient: http.DefaultClient,
-	}
-	// We have created the client object and filled in all neccesary data to query the API
-	result, req, rep, err := c.do("time")
-	// We have called the service and received a reply
-	if err != nil {
-		result = fmt.Sprintf("ERROR: %s", err)
-	}
-
-	app.render(w, r, "time.page.gohtml", &templateData{
-		Result: result,
-		Form: form,
-		Active: "time",
-		RequestHeaders: req,
-		ReplyHeaders: rep,
-	})
-}
-
-
-func (app *application) pingPost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	form := forms.New(r.PostForm)
-	form.Required("url", "client", "service")
-	form.MatchesPattern("url", forms.UrlRX)
-	form.ValidUrl("url")
-
-	if !form.Valid() {
-		//for k, v := range form.Errors {
-		//	fmt.Printf("key[%s] value[%s]\n", k, v)
-		//}
-		app.render(w, r, "ping.page.gohtml", &templateData{
-			Form: form,
-			Active: "ping",
-		})
-		return
-	}
-	u, _ := url.Parse(form.Get("url"))
-	// Now u is a valid parsed url for the security server
-
-	// Now we know we have a valid form
-	c := &Client{
-		BaseURL:  u,
-		XRoadClient:  form.Get("client"),
-		XRoadService:  form.Get("service"),
-		httpClient: http.DefaultClient,
-	}
-	// We have created the client object and filled in all neccesary data to query the API
-	result, req, rep, err := c.do("ping")
-	// We have called the service and received a reply
-	if err != nil {
-		result = fmt.Sprintf("ERROR: %s", err)
-	}
-
-	app.render(w, r, "ping.page.gohtml", &templateData{
-		Result: result,
-		Form: form,
-		Active: "ping",
-		RequestHeaders: req,
-		ReplyHeaders: rep,
-	})
+	// Construct the URL with the encoded parameter
+    // Perform the GET request
+    result, req, rep, err := c.do("health/impact/" + typeimpact)
+    
+	// Handle the result and rendering as needed
+    app.render(w, r, "healthapi.page.gohtml", &templateData{
+        Result:         result,
+        Form:           form,
+        Active:         "healthapi",
+        RequestHeaders: req,
+        ReplyHeaders:   rep,
+    })
 }
