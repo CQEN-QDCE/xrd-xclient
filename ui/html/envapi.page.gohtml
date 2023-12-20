@@ -52,7 +52,7 @@
                                 <div class="form-group">
                                     <label>Niveau de pollution:</label>
                                     {{with .Errors.Get "airlevel"}}{{template "error" .}}{{end}}
-                                    <input type="text" name="airlevel" value="{{.Get "airlevel"}}" placeholder="4" class="form-control" maxlength="255">
+                                    <input type="text" name="airlevel" value="{{.Get "airlevel"}}" placeholder="Élevé" class="form-control" maxlength="255">
                                 </div>
                                 <div class="form-group">
                                     <label>Obtenir les régions par niveau de pollution:</label>
